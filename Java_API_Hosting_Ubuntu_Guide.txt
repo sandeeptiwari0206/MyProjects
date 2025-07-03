@@ -1,0 +1,66 @@
+Steps to Host Java Spring Boot API on Ubuntu Server
+
+Step 1: Install Required Packages
+---------------------------------
+sudo apt update
+sudo apt install openjdk-17-jdk -y
+sudo apt install maven -y
+sudo apt install mysql-server -y
+sudo apt install certbot -y  # Optional, for SSL if needed
+
+Verify Installations
+---------------------
+java -version
+mvn -version
+mysql -v
+
+Step 2: Configure MySQL
+------------------------
+sudo systemctl enable mysql
+sudo systemctl start mysql
+sudo systemctl status mysql
+sudo mysql_secure_installation
+sudo mysql -u root -p
+
+Step 3: Prepare Application Directory
+-------------------------------------
+sudo mkdir -p /opt/justapay
+cd /home/sandeep/AirtelPaymentsBank
+cp -r src pom.xml /opt/justapay/
+cd /opt/justapay
+
+Step 4: Configure application.properties
+----------------------------------------
+cd src/main/resources/
+vi application.properties
+
+Add/Update in application.properties:
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+
+Step 5: Build the Application
+-----------------------------
+cd /opt/justapay
+rm -rf target/
+mvn clean install -DskipTests
+
+Step 6: Run the Application
+----------------------------
+cd target/
+java -jar bill-0.0.1-SNAPSHOT.jar  # Initial test
+sudo ufw allow 8080  # Or 8082, whichever port you're using
+
+To run in background:
+nohup java -jar bill-0.0.1-SNAPSHOT.jar output.log 2>&1 &
+
+Step 7: Verify It's Running
+----------------------------
+curl http://localhost:8080/ping
+curl http://<server-ip>:8080/ping
+ps aux | grep java
+jps -l
+sudo netstat -tulnp | grep 8080
+
+Step 8: Manage Java Process
+----------------------------
+kill -9 <PID>  # Replace with actual Java process ID
