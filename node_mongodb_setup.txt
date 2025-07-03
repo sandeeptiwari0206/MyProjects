@@ -1,0 +1,124 @@
+
+Systematic Setup Guide: Node.js Application with MongoDB (Ubuntu Server)
+=========================================================================
+
+Server IP: 172.23.95.251
+
+1️⃣ Update System
+-----------------
+sudo apt update && sudo apt upgrade -y
+
+2️⃣ Install Node.js (v18.x)
+----------------------------
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v
+npm -v
+
+3️⃣ Install MongoDB 6.0
+-------------------------
+# Import GPG key
+curl -fsSL https://www.mongodb.org/static/pgp/server-6.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-6.0.gpg
+
+# Add MongoDB repository
+echo "deb [ arch=amd64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+# Install MongoDB
+sudo apt update
+sudo apt install -y mongodb-org
+
+# Start and enable MongoDB
+sudo systemctl enable mongod
+sudo systemctl start mongod
+
+4️⃣ Secure MongoDB
+--------------------
+Edit MongoDB Config:
+sudo nano /etc/mongod.conf
+
+Ensure:
+net:
+  bindIp: 127.0.0.1
+
+Add under the file:
+security:
+  authorization: enabled
+
+Restart MongoDB:
+sudo systemctl restart mongod
+
+5️⃣ Create MongoDB Users
+--------------------------
+
+Admin User:
+mongosh
+use admin
+db.createUser({
+  user: "admin",
+  pwd: "StrongPasswordHere123!",
+  roles: [{ role: "userAdminAnyDatabase", db: "admin" }]
+})
+exit
+
+Reconnect:
+mongosh -u admin -p StrongPasswordHere123! --authenticationDatabase admin
+
+App DB & User:
+use game_db
+db.createUser({
+  user: "gameuser",
+  pwd: "GameUserPassword@123",
+  roles: [{ role: "readWrite", db: "game_db" }]
+})
+exit
+
+6️⃣ Install Node App Dependencies
+----------------------------------
+cd /path/to/your/app
+npm install
+
+7️⃣ Configure Environment Variables
+------------------------------------
+Create .env:
+PORT=3000
+MONGO_URI=mongodb://gameuser:GameUserPassword@123@localhost:27017/game_db?authSource=game_db
+
+Use in index.js:
+require('dotenv').config();
+const port = process.env.PORT || 3000;
+const db = process.env.MONGO_URI;
+
+8️⃣ Start Node App Using PM2
+-----------------------------
+sudo npm install -g pm2
+
+cd /path/to/your/app
+pm2 start index.js --name "Ludo"
+pm2 save
+pm2 startup
+
+Copy and run the command shown after `pm2 startup`.
+
+Logs:
+pm2 logs
+
+9️⃣ (Optional) Install Apache2
+-------------------------------
+sudo apt install apache2 -y
+
+🔟 (Optional) Install CSF Firewall
+-----------------------------------
+cd /usr/src
+sudo apt install -y perl libio-socket-ssl-perl libnet-libidn-perl libterm-readkey-perl libcrypt-ssleay-perl
+sudo wget https://download.configserver.com/csf.tgz
+sudo tar -xzf csf.tgz
+cd csf
+sudo sh install.sh
+sudo vi /etc/csf/csf.conf
+
+✅ Summary of MongoDB Credentials
+----------------------------------
+| Component        | Username     | Password                  | DB Name     |
+|------------------|--------------|----------------------------|-------------|
+| Mongo Admin      | admin        | StrongPasswordHere123!    | admin       |
+| App DB User      | gameuser     | GameUserPassword@123      | game_db     |

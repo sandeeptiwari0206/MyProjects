@@ -1,0 +1,168 @@
+172.23.95.251
+
+
+sudo apt update && sudo apt upgrade -y
+
+------------------------------------------------------
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v
+npm -v
+
+-----------------------------------------------------------
+# GPG key ko trusted.gpg.d me save karein
+curl -fsSL https://www.mongodb.org/static/pgp/server-6.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-6.0.gpg
+
+# Repo add karein using keyring
+
+echo "deb [ arch=amd64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+# Update aur install
+
+sudo apt update
+sudo apt install -y mongodb-org
+
+
+-----------------------------------------------------------
+
+DB user create
+
+mongosh
+use ludo
+
+db.createUser({
+  user: "ludouser",
+  pwd: "ludouser",
+  roles: [ { role: "readWrite", db: "yourDatabaseName" } ]
+})
+exit
+
+-------------------------------------------------------------
+
+CSF
+
+cd /usr/src
+sudo apt install -y perl libio-socket-ssl-perl libnet-libidn-perl libterm-readkey-perl libcrypt-ssleay-perl
+sudo wget https://download.configserver.com/csf.tgz
+sudo tar -xzf csf.tgz
+cd csf
+sudo sh install.sh
+
+
+sudo vi /etc/csf/csf.conf
+
+-------------------------------------------------------
+
+udo apt update
+sudo apt install apache2 -y
+
+-----------------------------------------------------------
+
+install dependency
+
+npm install
+
+------------------------------------------------------------
+
+8. Configure Environment File (.env)
+
+PORT=3000
+MONGO_URI=mongodb://yourUser:yourPassword@localhost:27017/yourDatabaseName
+
+Update your Node.js code to use these variables:
+
+require('dotenv').config();
+const port = process.env.PORT || 3000;
+const db = process.env.MONGO_URI;
+
+------------------------------------------------------------------
+
+ 9. Start the Application Using PM2
+
+sudo npm install -g pm2
+ 
+pm2 save
+pm2 startup
+pm2
+
+pm2 start index.js --name Ludo
+  pm2 logs
+-------------------------------------------------------------
+
+
+
+
+ 1. Bind MongoDB to localhost (unless remote access is needed)
+
+Edit MongoDB config:
+
+sudo nano /etc/mongod.conf
+
+
+
+Ensure this line is set (default):
+
+net:
+  bindIp: 127.0.0.1
+
+    🔐 This prevents remote access. Only the local Node.js app can connect.
+
+
+
+
+
+2. Enable Authentication
+
+Still in /etc/mongod.conf, enable security:
+
+security:
+  authorization: enabled
+
+Save and restart MongoDB:
+
+sudo systemctl restart mongod
+
+
+
+
+3. Create Admin User
+
+Start Mongo shell (still unauthenticated for now):
+
+mongosh
+
+Create admin user:
+
+use admin
+
+db.createUser({
+  user: "admin",
+  pwd: "StrongPasswordHere123!",
+  roles: [{ role: "userAdminAnyDatabase", db: "admin" }]
+})
+
+Exit and re-login to verify:
+
+mongosh -u admin -p StrongPasswordHere123! --authenticationDatabase admin
+
+✅ Now access is password-protected.
+
+
+
+
+
+4. Create Application User (Recommended)
+
+Still in Mongo shell (as admin):
+
+use game_db
+
+db.createUser({
+  user: "gameuser",
+  pwd: "GameUserPassword@123",
+  roles: [{ role: "readWrite", db: "game_db" }]
+})
+
+Update your .env:
+
+MONGO_URI=mongodb://gameuser:GameUserPassword@123@localhost:27017/game_db?authSource=game_db

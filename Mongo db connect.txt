@@ -1,0 +1,22 @@
+mongodb://chess:VA30C8dCSPm13@108.170.8.206:27017/CHESS?authSource=CHESS
+
+
+MongoDB Credentials:-
+=====================
+admin
+xZM5Dxm&|l3Y7/X*
+
+
+mongosh -u admin -p "xZM5Dxm&|l3Y7/X*"  --authenticationDatabase admin
+
+
+use LUDO
+
+db.createUser({
+  user: "ludouser",
+  pwd: "VA30C8dCSPm13",
+  roles: [{ role: "readWrite", db: "LUDO" }]
+})
+
+
+MONGO_URL=mongodb://ludouser:VA30C8dCSPm13@108.170.8.206:27017/LUDO?authSource=LUDO
